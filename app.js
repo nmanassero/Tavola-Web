@@ -3,7 +3,7 @@
 const WHATSAPP_NUMBER = "5493425690824";
 
 // Precio de cada vianda u opcional cuando la columna "precio" de la planilla está vacía.
-const PRECIO_POR_DEFECTO = 4900;
+const PRECIO_POR_DEFECTO = 5700;
 
 // ID de la planilla de Google con el menú: es la parte del link entre "/d/" y "/edit".
 // La planilla tiene que estar compartida como "Cualquier persona con el enlace: Lector".
