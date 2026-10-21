@@ -51,6 +51,8 @@ Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
 
 - `WHATSAPP_NUMBER`: número que recibe los pedidos, formato internacional sin `+` (54 9 + característica + número).
 - `PRECIO_POR_DEFECTO`: precio de cada vianda sin precio en la planilla.
+- `PRECIO_SEMANAL` / `PRECIO_MENSUAL`: precio por vianda de cada plan. En `null` la web muestra "Más barato" en lugar del precio.
+- `PROMO_ACTIVA`: cartel "¡Aprovechá y reservá mensualmente!" que aparece al entrar (una vez cada `PROMO_DIAS` días por celular). `false` lo apaga.
 - `HORA_LIMITE`: hasta qué hora (de Argentina) se puede pedir la vianda del mismo día. Los días que ya pasaron no se muestran. Los sábados no se toman pedidos; desde el domingo se muestra la semana siguiente.
 
 ## Probar localmente

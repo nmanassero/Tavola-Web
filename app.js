@@ -16,6 +16,14 @@ const SHEET_ID = "16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA";
 const HORA_LIMITE = "10:30";
 const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
 
+// Precio por vianda de cada plan. Mientras quede en null, ese precio no se muestra en la web.
+const PRECIO_SEMANAL = null;
+const PRECIO_MENSUAL = null;
+
+// Cartel de promoción que aparece al entrar (una vez cada 7 días por celular). Para apagarlo: false.
+const PROMO_ACTIVA = true;
+const PROMO_DIAS = 7;
+
 // ===== Datos =====
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const TIPOS = {
@@ -303,6 +311,41 @@ $("order-form").addEventListener("submit", (e) => {
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
   dialog.close();
 });
+
+// ===== Planes y promoción =====
+function renderPlanes() {
+  const planes = [
+    ["Diario", PRECIO_POR_DEFECTO, "Transferís cada pedido"],
+    ["Semanal", PRECIO_SEMANAL, "Pagás la semana y elegís cada día"],
+    ["Mensual", PRECIO_MENSUAL, "Pagás una vez y pedís cada día"],
+  ];
+  const html = planes.map(([nombre, precio, detalle]) => `
+    <li>
+      <strong>${nombre}</strong>
+      <span class="plan-price">${precio ? `${money(precio)} <small>por vianda</small>` : "Más barato"}</span>
+      <small>${detalle}</small>
+    </li>`).join("");
+  document.querySelectorAll(".plans").forEach((ul) => { ul.innerHTML = html; });
+}
+
+const promo = $("promo-dialog");
+function abrirPromo() { if (!dialog.open) promo.showModal(); }
+$("promo-close").addEventListener("click", () => promo.close());
+$("open-promo").addEventListener("click", abrirPromo);
+$("promo-whatsapp").href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("¡Hola Tavola! Quiero info del plan mensual.")}`;
+
+function mostrarPromoSiCorresponde() {
+  if (!PROMO_ACTIVA) return;
+  try {
+    const ultima = Number(localStorage.getItem("tavola-promo") || 0);
+    if (Date.now() - ultima < PROMO_DIAS * 86400000) return;
+    localStorage.setItem("tavola-promo", String(Date.now()));
+  } catch {}
+  setTimeout(abrirPromo, 2500);
+}
+
+renderPlanes();
+mostrarPromoSiCorresponde();
 
 Promise.all([cargarMenu(), cargarCerrados().catch(() => ({}))])
   .then(([menu, cerrados]) => {

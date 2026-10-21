@@ -30,6 +30,10 @@
   <main id="menus" class="wrap">
     <h2>Menú de la semana</h2>
     <p class="intro">Para cada día elegí <strong>menú estándar</strong>, <strong>menú saludable</strong> u <strong>opcional</strong>. Podés pagar por día, por semana o por mes.</p>
+    <div class="plans-box">
+      <p>Pagá por día, por semana o por mes. <strong>Con los planes ahorrás hasta un 25%.</strong></p>
+      <button type="button" class="btn btn-green btn-small" id="open-promo">Ver planes</button>
+    </div>
     <ul id="day-nav" class="day-nav"></ul>
     <div id="menu"><p class="loading">Cargando menú…</p></div>
   </main>
@@ -71,6 +75,17 @@
         <button type="submit" class="btn btn-green">Enviar por WhatsApp</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="promo-dialog" class="promo">
+    <img class="promo-logo" src="img/logo.png" alt="">
+    <h3>¡Aprovechá y reservá mensualmente!</h3>
+    <p class="promo-lead">Ahorrás hasta un <strong>25%</strong></p>
+    <ul class="plans"></ul>
+    <div class="promo-actions">
+      <a class="btn btn-green" id="promo-whatsapp" target="_blank" rel="noopener">Quiero el plan mensual</a>
+      <button type="button" class="btn btn-ghost" id="promo-close">Ver el menú</button>
+    </div>
   </dialog>
 
   <footer class="wrap footer">

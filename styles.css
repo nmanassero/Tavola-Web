@@ -51,6 +51,31 @@ main h2 { font-size: 2.6rem; margin: 40px 0 4px; }
 .loading, .error { color: var(--muted); }
 .error a { color: var(--green-dark); font-weight: 600; }
 
+.plans-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface); border: 2px solid var(--green); border-radius: var(--radius);
+  padding: 12px 16px; margin: 0 0 12px;
+}
+.plans-box p { margin: 0; font-size: .95rem; }
+.plans-box strong { color: var(--green-dark); }
+.btn-small { padding: 8px 16px; font-size: .9rem; white-space: nowrap; }
+
+.promo { text-align: center; }
+.promo-logo { width: 84px; height: 84px; border-radius: 50%; box-shadow: 0 4px 16px rgba(122,58,20,.15); }
+.promo h3 { font-size: 2rem; margin: 8px 0 0; line-height: 1.1; }
+.promo-lead { margin: 6px 0 16px; font-size: 1.15rem; color: var(--brown); }
+.promo-lead strong { color: var(--red); font-size: 1.4rem; }
+.plans { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 8px; text-align: left; }
+.plans li {
+  display: grid; grid-template-columns: 1fr auto; gap: 0 12px;
+  background: var(--paper-light); border-radius: 10px; padding: 10px 14px;
+}
+.plans li:last-child { border: 2px solid var(--green); }
+.plans li > small { grid-column: 1 / -1; color: var(--muted); }
+.plan-price { font-weight: 600; color: var(--brown); }
+.plan-price small { font-weight: 400; color: var(--muted); }
+.promo-actions { display: flex; flex-direction: column; gap: 6px; }
+
 .day-nav {
   position: sticky; top: 0; z-index: 5;
   display: flex; gap: 8px; overflow-x: auto;
