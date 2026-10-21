@@ -10,20 +10,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <header class="hero">
     <div class="wrap">
       <img class="logo" src="img/logo.png" alt="Tavola">
       <h1>Viandas caseras</h1>
-      <p class="lead">Elegí tus menúes, sumá la cantidad y mandanos el pedido por WhatsApp.</p>
+      <p class="lead">Elegí tu vianda de cada día y mandanos el pedido por WhatsApp.</p>
       <ul class="chips">
         <li>Lunes a viernes al mediodía</li>
         <li>Envío gratis en Santa Fe Capital</li>
         <li>Pedidos hasta las 10:30 hs</li>
       </ul>
       <a class="btn btn-green" href="#menus">Ver menúes</a>
+      <a class="wa-badge" target="_blank" rel="noopener"><small>whatsapp</small><span class="wa-number"></span></a>
     </div>
   </header>
 
@@ -88,10 +89,21 @@
     </div>
   </dialog>
 
+  <dialog id="missing-dialog" class="promo">
+    <h3>¿Estás seguro?</h3>
+    <p id="missing-text"></p>
+    <p class="promo-lead">¿Querés completarlos y dejar reservada la semana?</p>
+    <div class="promo-actions">
+      <button type="button" class="btn btn-green" id="missing-complete">Sí, completar la semana</button>
+      <button type="button" class="btn btn-ghost" id="missing-continue">No, seguir con mi pedido</button>
+    </div>
+  </dialog>
+
   <footer class="wrap footer">
-    Seguinos en <a href="https://www.instagram.com/tavola_oficial" target="_blank" rel="noopener">@tavola_oficial</a>
+    <a class="wa-badge" target="_blank" rel="noopener"><small>whatsapp</small><span class="wa-number"></span></a>
+    <p>Seguinos en <a href="https://www.instagram.com/tavola_oficial" target="_blank" rel="noopener">@tavola_oficial</a></p>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

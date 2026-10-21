@@ -185,4 +185,17 @@ input, select, textarea {
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
 .footer { text-align: center; padding: 40px 16px; color: var(--muted); }
+.footer p { margin: 16px 0 0; }
+
+/* Cartel verde "whatsapp 3425-…" como el de los posts de Instagram */
+.wa-badge {
+  display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.05;
+  background: var(--green); color: #fff; text-decoration: none;
+  border-radius: 18px 18px 18px 4px; padding: 8px 16px 10px;
+  font-family: "Caveat Brush", cursive;
+}
+.wa-badge small { font-size: 1.1rem; }
+.wa-badge span { font-size: 1.6rem; letter-spacing: .02em; }
+.wa-badge:hover { background: var(--green-dark); }
+.hero .wa-badge { margin: 16px auto 0; display: flex; width: max-content; }
 .footer a { color: var(--red); font-weight: 600; text-decoration: none; }

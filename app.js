@@ -1,6 +1,8 @@
 // ===== Configuración =====
 // Número de WhatsApp en formato internacional, sin "+" ni espacios (54 + 9 + característica + número).
 const WHATSAPP_NUMBER = "5493425208204";
+// El mismo número como se muestra en la web (igual que en Instagram).
+const WHATSAPP_VISIBLE = "3425-208204";
 
 // Precio de cada vianda cuando la columna "precio" de la planilla está vacía.
 // Los opcionales sin precio no suman nada; si tienen precio, se suma a la vianda.
@@ -295,8 +297,36 @@ $("menu").addEventListener("click", (e) => {
 
 const dialog = $("order-dialog");
 
+// Días que todavía se pueden pedir y quedaron sin vianda elegida.
+function diasFaltantes() {
+  return DIAS.filter((d) => CAL[d].abierto && !sel[d]?.menu && MENU.some((i) => i.dia === d && i.tipo !== "opcional"));
+}
+
+const enumerar = (xs) => xs.length > 1 ? `${xs.slice(0, -1).join(", ")} y ${xs[xs.length - 1]}` : xs[0];
+
+// Antes de abrir el pedido, si faltan días de la semana, pregunta si los quiere completar.
+const faltantes = $("missing-dialog");
 $("open-order").addEventListener("click", () => {
   if (quitarCerrados() && !pedidos().length) return;
+  const faltan = diasFaltantes();
+  if (!faltan.length) return abrirPedido();
+  $("missing-text").textContent = faltan.length === 1
+    ? `Te faltó elegir la vianda del ${faltan[0].toLowerCase()}.`
+    : `Te faltó elegir las viandas del ${enumerar(faltan.map((d) => d.toLowerCase()))}.`;
+  faltantes.dataset.primero = faltan[0];
+  faltantes.showModal();
+});
+
+$("missing-complete").addEventListener("click", () => {
+  faltantes.close();
+  $("dia-" + norm(faltantes.dataset.primero)).scrollIntoView({ behavior: "smooth" });
+});
+$("missing-continue").addEventListener("click", () => {
+  faltantes.close();
+  abrirPedido();
+});
+
+function abrirPedido() {
   $("order-list").innerHTML = pedidos().map((p) => `
     <li><strong>${p.dia} ${CAL[p.dia].fecha}</strong>
       <ul>
@@ -307,7 +337,7 @@ $("open-order").addEventListener("click", () => {
   restaurarDatos();
   mostrarTotal();
   dialog.showModal();
-});
+}
 
 $("close-order").addEventListener("click", () => dialog.close());
 $("order-form").elements.pago.addEventListener("change", mostrarTotal);
@@ -354,7 +384,7 @@ function renderPlanes() {
 }
 
 const promo = $("promo-dialog");
-function abrirPromo() { if (!dialog.open) promo.showModal(); }
+function abrirPromo() { if (!dialog.open && !faltantes.open) promo.showModal(); }
 $("promo-close").addEventListener("click", () => promo.close());
 $("open-promo").addEventListener("click", abrirPromo);
 $("promo-whatsapp").href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("¡Hola Tavola! Quiero info del plan mensual.")}`;
@@ -368,6 +398,9 @@ function mostrarPromoSiCorresponde() {
   } catch {}
   setTimeout(abrirPromo, 2500);
 }
+
+document.querySelectorAll(".wa-badge").forEach((a) => { a.href = `https://wa.me/${WHATSAPP_NUMBER}`; });
+document.querySelectorAll(".wa-number").forEach((el) => { el.textContent = WHATSAPP_VISIBLE; });
 
 renderPlanes();
 mostrarPromoSiCorresponde();
