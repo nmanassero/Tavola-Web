@@ -1,6 +1,6 @@
 // ===== Configuración =====
 // Número de WhatsApp en formato internacional, sin "+" ni espacios (54 + 9 + característica + número).
-const WHATSAPP_NUMBER = "5493425690824";
+const WHATSAPP_NUMBER = "5493425208204";
 
 // Precio de cada vianda cuando la columna "precio" de la planilla está vacía.
 // Los opcionales sin precio no suman nada; si tienen precio, se suma a la vianda.
