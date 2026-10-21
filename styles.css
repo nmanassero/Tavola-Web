@@ -46,28 +46,50 @@ h1, h2, h3 { font-family: "Caveat Brush", "Comic Sans MS", cursive; font-weight:
   padding: 6px 14px; font-size: .9rem; font-weight: 500;
 }
 
-main h2 { font-size: 2.6rem; margin: 40px 0 16px; }
-.grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+main h2 { font-size: 2.6rem; margin: 40px 0 4px; }
+.intro { margin: 0 0 16px; color: var(--muted); }
+.loading, .error { color: var(--muted); }
+.error a { color: var(--green-dark); font-weight: 600; }
 
-.card {
+.day-nav {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; gap: 8px; overflow-x: auto;
+  list-style: none; margin: 0 -16px 8px; padding: 10px 16px;
+  background: var(--paper-light);
+}
+.day-nav a {
+  display: block; white-space: nowrap; text-decoration: none;
+  background: var(--surface); color: var(--brown);
+  border: 2px solid var(--brown); border-radius: 999px;
+  padding: 4px 14px; font-weight: 500; font-size: .9rem;
+}
+.day-nav a:hover { background: var(--brown); color: #fff; }
+
+.day { scroll-margin-top: 64px; margin-bottom: 28px; }
+.day h3 { font-size: 2.2rem; margin: 16px 0 8px; }
+.day-groups { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+.group {
   background: var(--surface);
   border-radius: var(--radius);
-  overflow: hidden;
   box-shadow: 0 2px 12px rgba(122,58,20,.08);
-  display: flex; flex-direction: column;
+  padding: 16px;
+  border-top: 6px solid var(--red);
 }
-.card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-.card .ph { aspect-ratio: 4/3; background: var(--paper); display: grid; place-items: center; font-size: 3.5rem; }
-.card-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.card h3 { margin: 0; font-size: 1.7rem; line-height: 1.1; }
-.card p { margin: 0; color: var(--muted); font-size: .95rem; flex: 1; }
-.card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.group-saludable { border-top-color: var(--green); }
+.group-opcional { border-top-color: var(--brown); background: var(--paper-light); box-shadow: none; border: 2px dashed var(--paper); border-top: 6px solid var(--brown); }
+.group h4 { margin: 0 0 8px; font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+
+.dish { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.dish + .dish { border-top: 1px solid var(--paper); }
+.dish-info strong { display: block; font-size: 1.05rem; }
+.dish-info p { margin: 2px 0 6px; color: var(--muted); font-size: .9rem; }
 .price {
-  font-weight: 600; color: var(--brown);
-  border: 2px solid var(--brown); border-radius: 999px; padding: 2px 12px;
+  display: inline-block; font-weight: 600; color: var(--brown); font-size: .9rem;
+  border: 2px solid var(--brown); border-radius: 999px; padding: 0 10px;
 }
 
-.qty { display: flex; align-items: center; gap: 10px; }
+.qty { flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
 .qty button {
   width: 36px; height: 36px; border-radius: 50%;
   border: 2px solid var(--red); background: transparent; color: var(--red);
@@ -103,7 +125,8 @@ dialog {
 }
 dialog::backdrop { background: rgba(58,36,20,.5); }
 dialog h3 { margin-top: 0; font-size: 2rem; }
-#order-list { padding-left: 18px; margin: 0 0 8px; }
+#order-list { padding-left: 0; margin: 0 0 8px; list-style: none; }
+#order-list ul { padding-left: 18px; margin: 2px 0 8px; }
 .total-line { margin: 0 0 4px; }
 .note { margin: 0 0 16px; color: var(--green-dark); font-size: .9rem; font-weight: 500; }
 label { display: block; font-size: .9rem; font-weight: 500; margin-bottom: 12px; }
