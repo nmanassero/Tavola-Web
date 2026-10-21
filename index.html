@@ -3,20 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tavola · Menúes</title>
-  <meta name="description" content="Elegí tu menú de Tavola y hacé el pedido por WhatsApp.">
+  <title>Tavola · Viandas caseras</title>
+  <meta name="description" content="Viandas caseras de lunes a viernes al mediodía en Santa Fe Capital. Elegí tu menú y pedí por WhatsApp.">
+  <meta name="theme-color" content="#bb3737">
+  <link rel="icon" href="img/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="hero">
     <div class="wrap">
-      <p class="eyebrow">Comida casera</p>
-      <h1>Tavola</h1>
+      <img class="logo" src="img/logo.png" alt="Tavola">
+      <h1>Viandas caseras</h1>
       <p class="lead">Elegí tus menúes, sumá la cantidad y mandanos el pedido por WhatsApp.</p>
-      <a class="btn btn-light" href="#menus">Ver menúes</a>
+      <ul class="chips">
+        <li>Lunes a viernes al mediodía</li>
+        <li>Envío gratis en Santa Fe Capital</li>
+      </ul>
+      <a class="btn btn-green" href="#menus">Ver menúes</a>
     </div>
   </header>
 
@@ -28,7 +34,7 @@
   <aside id="cart" class="cart" aria-live="polite">
     <div class="wrap cart-inner">
       <div>
-        <strong id="cart-count">0 items</strong>
+        <strong id="cart-count">0 viandas</strong>
         <span id="cart-total"></span>
       </div>
       <button id="open-order" class="btn" disabled>Hacer pedido</button>
@@ -40,30 +46,25 @@
       <h3>Tu pedido</h3>
       <ul id="order-list"></ul>
       <p class="total-line">Total: <strong id="order-total"></strong></p>
+      <p class="note">Envío gratis en Santa Fe Capital</p>
       <label>Nombre
         <input name="nombre" required autocomplete="name">
       </label>
-      <label>Entrega
-        <select name="entrega" id="entrega">
-          <option value="Retiro">Retiro</option>
-          <option value="Envío">Envío a domicilio</option>
-        </select>
-      </label>
-      <label id="direccion-field" hidden>Dirección
-        <input name="direccion" autocomplete="street-address">
+      <label>Dirección de entrega
+        <input name="direccion" required autocomplete="street-address">
       </label>
       <label>Comentarios (opcional)
-        <textarea name="comentarios" rows="2"></textarea>
+        <textarea name="comentarios" rows="2" placeholder="Ej: para el martes, sin cebolla…"></textarea>
       </label>
       <div class="dialog-actions">
         <button type="button" class="btn btn-ghost" id="close-order">Volver</button>
-        <button type="submit" class="btn btn-wa">Enviar por WhatsApp</button>
+        <button type="submit" class="btn btn-green">Enviar por WhatsApp</button>
       </div>
     </form>
   </dialog>
 
   <footer class="wrap footer">
-    <a href="https://www.instagram.com/tavola_oficial" target="_blank" rel="noopener">@tavola_oficial</a>
+    Seguinos en <a href="https://www.instagram.com/tavola_oficial" target="_blank" rel="noopener">@tavola_oficial</a>
   </footer>
 
   <script src="app.js"></script>

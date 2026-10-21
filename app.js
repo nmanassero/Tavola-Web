@@ -4,14 +4,15 @@
 // El número que se pasó fue 3425111111 (Santa Fe); confirmá que esto sea correcto.
 const WHATSAPP_NUMBER = "5493425111111";
 
-// Menúes de EJEMPLO: reemplazar por los reales (nombre, descripción, precio, imagen opcional).
+// Menúes de EJEMPLO, basados en los platos que se ven en los posts de Instagram.
+// Reemplazar por los reales (nombre, descripción, precio, imagen opcional en img/).
+// Precio: $4.900 por vianda, según los posts (pueden estar desactualizados).
 const MENUS = [
-  { id: "lasagna", nombre: "Lasaña de carne", descripcion: "Capas de pasta casera, bolognesa y bechamel.", precio: 8500, emoji: "🍝" },
-  { id: "ravioles", nombre: "Ravioles de ricota", descripcion: "Con salsa fileto o crema, a elección.", precio: 7800, emoji: "🥟" },
-  { id: "noquis", nombre: "Ñoquis de papa", descripcion: "Con salsa mixta.", precio: 7000, emoji: "🍽️" },
-  { id: "milanesa", nombre: "Milanesa con puré", descripcion: "Milanesa de ternera con puré de papas.", precio: 8000, emoji: "🥩" },
-  { id: "tarta", nombre: "Tarta de verduras", descripcion: "Acelga, cebolla y queso. Porción grande.", precio: 6500, emoji: "🥧" },
-  { id: "postre", nombre: "Tiramisú", descripcion: "Porción individual.", precio: 4000, emoji: "🍰" },
+  { id: "milanesa", nombre: "Milanesa con papas", descripcion: "Milanesa casera con papas al horno.", precio: 4900, emoji: "🍗" },
+  { id: "ravioles", nombre: "Ravioles con salsa", descripcion: "Ravioles con salsa de tomate y queso rallado.", precio: 4900, emoji: "🥟" },
+  { id: "carne-salsa", nombre: "Carne a la portuguesa", descripcion: "Carne en salsa con queso rallado.", precio: 4900, emoji: "🥩" },
+  { id: "arroz", nombre: "Arroz amarillo con pollo", descripcion: "Arroz con pollo y verduras.", precio: 4900, emoji: "🍚" },
+  { id: "saludable", nombre: "Menú + Saludable", descripcion: "Ensalada completa con huevo, legumbres y verduras frescas.", precio: 4900, emoji: "🥗" },
 ];
 
 // ===== Lógica =====
@@ -46,7 +47,7 @@ function updateCart() {
   const list = items();
   const count = list.reduce((s, i) => s + i.cantidad, 0);
   const total = list.reduce((s, i) => s + i.cantidad * i.precio, 0);
-  $("cart-count").textContent = count === 1 ? "1 item" : `${count} items`;
+  $("cart-count").textContent = count === 1 ? "1 vianda" : `${count} viandas`;
   $("cart-total").textContent = count ? money(total) : "";
   $("open-order").disabled = count === 0;
   MENUS.forEach((m) => { $("qty-" + m.id).textContent = cart[m.id] || 0; });
@@ -71,12 +72,6 @@ $("open-order").addEventListener("click", () => {
 
 $("close-order").addEventListener("click", () => dialog.close());
 
-$("entrega").addEventListener("change", (e) => {
-  const envio = e.target.value === "Envío";
-  $("direccion-field").hidden = !envio;
-  $("direccion-field").querySelector("input").required = envio;
-});
-
 $("order-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const data = new FormData(e.target);
@@ -89,9 +84,8 @@ $("order-form").addEventListener("submit", (e) => {
     "",
     `Total: ${money(total)}`,
     `Nombre: ${data.get("nombre")}`,
-    `Entrega: ${data.get("entrega")}`,
+    `Dirección: ${data.get("direccion")}`,
   ];
-  if (data.get("entrega") === "Envío") lines.push(`Dirección: ${data.get("direccion")}`);
   if (data.get("comentarios").trim()) lines.push(`Comentarios: ${data.get("comentarios").trim()}`);
 
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
