@@ -4,9 +4,16 @@ const WHATSAPP_NUMBER = "5493425208204";
 // El mismo número como se muestra en la web (igual que en Instagram).
 const WHATSAPP_VISIBLE = "3425-208204";
 
-// Precio de cada vianda cuando la columna "precio" de la planilla está vacía.
-// Los opcionales sin precio no suman nada; si tienen precio, se suma a la vianda.
-const PRECIO_POR_DEFECTO = 5700;
+// Precios y planes. Son los valores por defecto: si la planilla tiene la pestaña "Precios",
+// se usan los de ahí. El ahorro de cada plan se expresa en viandas por mes.
+// precioVianda también es el precio de cada menú que no tenga precio en la planilla
+// (los opcionales sin precio no suman nada; si tienen precio, se suma a la vianda).
+let PRECIOS = {
+  precioVianda: 5700,
+  diasPorMes: 20,
+  ahorroSemanal: 1,
+  ahorroMensual: 3,
+};
 
 // ID de la planilla de Google con el menú: es la parte del link entre "/d/" y "/edit".
 // La planilla tiene que estar compartida como "Cualquier persona con el enlace: Lector".
@@ -18,10 +25,6 @@ const SHEET_ID = "16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA";
 // Los domingos ya se puede pedir para la semana siguiente; los sábados no se toman pedidos.
 const HORA_LIMITE = "10:30";
 const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
-
-// Precio por vianda de cada plan. Mientras quede en null, ese precio no se muestra en la web.
-const PRECIO_SEMANAL = null;
-const PRECIO_MENSUAL = null;
 
 // Cartel de promoción que aparece al entrar (una vez cada 7 días por celular). Para apagarlo: false.
 const PROMO_ACTIVA = true;
@@ -96,7 +99,7 @@ function cargarFilas(rows) {
     const plato = (r[col("plato")] || "").trim();
     const tipo = tipoDe(r[col("tipo")]);
     if (!plato || !tipo) return;
-    const precio = Number((r[col("precio")] || "").replace(/\D/g, "")) || (tipo === "opcional" ? 0 : PRECIO_POR_DEFECTO);
+    const precio = Number((r[col("precio")] || "").replace(/\D/g, "")) || (tipo === "opcional" ? 0 : PRECIOS.precioVianda);
     diasDe(r[col("dia")]).forEach((dia) => {
       items.push({ id: "i" + items.length, dia, tipo, plato, descripcion: (r[col("descripcion")] || "").trim(), precio });
     });
@@ -130,6 +133,46 @@ async function cargarCerrados() {
     diasDe(r[cDia]).forEach((dia) => { cerrados[dia] = (r[cMotivo] || "").trim(); });
   });
   return cerrados;
+}
+
+// Pestaña "Precios" (columnas: concepto, valor). Se reconoce cada fila por palabras del concepto.
+// Igual que con "Días": si la pestaña no existe, Google devuelve la del menú y se ignora.
+async function cargarPrecios() {
+  if (!SHEET_ID) return PRECIOS;
+  const rows = await leerCSV(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Precios`);
+  const header = rows[0].map(norm);
+  const [cConcepto, cValor] = ["concepto", "valor"].map((c) => header.indexOf(c));
+  if (cConcepto < 0 || cValor < 0) return PRECIOS;
+  const precios = { ...PRECIOS };
+  rows.slice(1).forEach((r) => {
+    const concepto = norm(r[cConcepto]);
+    const valor = Number((r[cValor] || "").replace(/[^\d]/g, ""));
+    if (!(r[cValor] || "").trim() || Number.isNaN(valor)) return;
+    if (concepto.includes("semanal")) precios.ahorroSemanal = valor;
+    else if (concepto.includes("mensual")) precios.ahorroMensual = valor;
+    else if (concepto.includes("dias")) precios.diasPorMes = valor;
+    else if (concepto.includes("precio")) precios.precioVianda = valor;
+  });
+  return precios;
+}
+
+// Precio de cada forma de pago. Todo se calcula sobre un mes de `diasPorMes` días hábiles.
+function planes() {
+  const { precioVianda: v, diasPorMes: dias, ahorroSemanal, ahorroMensual } = PRECIOS;
+  const mesSinPlan = dias * v;
+  const semanas = dias / 5;
+  const plan = (ahorroViandas) => {
+    const mes = mesSinPlan - ahorroViandas * v;
+    return { mes, ahorro: mesSinPlan - mes, porcentaje: Math.round(((mesSinPlan - mes) / mesSinPlan) * 100) };
+  };
+  const semanal = plan(ahorroSemanal);
+  semanal.semana = Math.round(semanal.mes / semanas);
+  return {
+    mesSinPlan, semanaSinPlan: 5 * v, dias,
+    diario: { vianda: v },
+    semanal,
+    mensual: plan(ahorroMensual),
+  };
 }
 
 // ===== Horario =====
@@ -272,11 +315,22 @@ function restaurarDatos() {
   } catch {}
 }
 
+// Precio del plan como texto, para el formulario y el mensaje.
+function precioPlan(pago) {
+  const p = planes();
+  if (pago === "semanal") return `${money(p.semanal.semana)} por semana`;
+  if (pago === "mensual") return `${money(p.mensual.mes)} por mes`;
+  return "";
+}
+
 function mostrarTotal() {
   const pago = $("order-form").elements.pago.value;
+  const p = planes();
+  const tachado = pago === "semanal" ? money(p.semanaSinPlan) : money(p.mesSinPlan);
   $("order-total-line").innerHTML = pago === "diario"
     ? `Total a transferir: <strong>${money(resumen(pedidos()).total)}</strong>`
-    : `Incluido en tu ${PAGOS[pago].toLowerCase()}. El pago del plan lo coordinamos por WhatsApp.`;
+    : `${PAGOS[pago]}: <s>${tachado}</s> <strong>${precioPlan(pago)}</strong> (ahorrás ${p[pago].porcentaje}%).
+       Este pedido queda incluido en tu plan; el pago lo coordinamos por WhatsApp.`;
 }
 
 // Tocar un menú lo elige (y deselecciona el otro); tocarlo de nuevo lo quita, junto con su opcional.
@@ -355,7 +409,7 @@ $("order-form").addEventListener("submit", (e) => {
   const pago = data.get("pago");
   lines.push(
     "",
-    `Forma de pago: ${PAGOS[pago]}`,
+    `Forma de pago: ${PAGOS[pago]}${pago === "diario" ? "" : ` (${precioPlan(pago)})`}`,
     ...(pago === "diario" ? [`Total: ${money(resumen(list).total)}`] : []),
     `Nombre: ${data.get("nombre")}`,
     `Dirección: ${data.get("direccion")}`,
@@ -368,26 +422,58 @@ $("order-form").addEventListener("submit", (e) => {
 });
 
 // ===== Planes y promoción =====
+let planElegido = "mensual";
+
 function renderPlanes() {
-  const planes = [
-    ["Diario", PRECIO_POR_DEFECTO, "Transferís cada pedido"],
-    ["Semanal", PRECIO_SEMANAL, "Pagás la semana y elegís cada día"],
-    ["Mensual", PRECIO_MENSUAL, "Pagás una vez y pedís cada día"],
+  const p = planes();
+  const opciones = [
+    ["diario", "Diario", "Transferís cada pedido",
+      `<b>${money(p.diario.vianda)}</b> por vianda`,
+      `En el mes (${p.dias} días): ${money(p.mesSinPlan)}`],
+    ["semanal", "Plan semanal", "Pagás la semana y elegís cada día",
+      `<s>${money(p.semanaSinPlan)}</s> <b>${money(p.semanal.semana)}</b> por semana`,
+      `En el mes: <s>${money(p.mesSinPlan)}</s> ${money(p.semanal.mes)} · ahorrás ${money(p.semanal.ahorro)}`],
+    ["mensual", "Plan mensual", "Pagás una vez y pedís cada día",
+      `<s>${money(p.mesSinPlan)}</s> <b>${money(p.mensual.mes)}</b> por mes`,
+      `Ahorrás ${money(p.mensual.ahorro)}`],
   ];
-  const html = planes.map(([nombre, precio, detalle]) => `
+  $("plans").innerHTML = opciones.map(([valor, nombre, detalle, precio, mes]) => `
     <li>
-      <strong>${nombre}</strong>
-      <span class="plan-price">${precio ? `${money(precio)} <small>por vianda</small>` : "Más barato"}</span>
-      <small>${detalle}</small>
+      <label class="plan">
+        <input type="radio" name="plan" value="${valor}" ${valor === planElegido ? "checked" : ""}>
+        <span class="plan-head"><strong>${nombre}</strong>${p[valor].porcentaje ? `<span class="plan-off">-${p[valor].porcentaje}%</span>` : ""}</span>
+        <span class="plan-price">${precio}</span>
+        <span class="plan-month">${mes}</span>
+        <small>${detalle}</small>
+      </label>
     </li>`).join("");
-  document.querySelectorAll(".plans").forEach((ul) => { ul.innerHTML = html; });
+  const maximo = Math.max(p.semanal.porcentaje, p.mensual.porcentaje);
+  document.querySelectorAll(".ahorro-max").forEach((el) => { el.textContent = `${maximo}%`; });
+  actualizarBotonPlan();
+}
+
+function actualizarBotonPlan() {
+  $("promo-choose").textContent = planElegido === "diario" ? "Pagar por día" : `Quiero el ${PAGOS[planElegido].toLowerCase()}`;
 }
 
 const promo = $("promo-dialog");
 function abrirPromo() { if (!dialog.open && !faltantes.open) promo.showModal(); }
 $("promo-close").addEventListener("click", () => promo.close());
 $("open-promo").addEventListener("click", abrirPromo);
-$("promo-whatsapp").href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("¡Hola Tavola! Quiero info del plan mensual.")}`;
+$("plans").addEventListener("change", (e) => {
+  planElegido = e.target.value;
+  actualizarBotonPlan();
+});
+// Elegir un plan lo deja seleccionado como forma de pago del pedido.
+$("promo-choose").addEventListener("click", () => {
+  $("order-form").elements.pago.value = planElegido;
+  try {
+    const datos = JSON.parse(localStorage.getItem("tavola-datos") || "{}");
+    localStorage.setItem("tavola-datos", JSON.stringify({ ...datos, pago: planElegido }));
+  } catch {}
+  promo.close();
+  $("menus").scrollIntoView({ behavior: "smooth" });
+});
 
 function mostrarPromoSiCorresponde() {
   if (!PROMO_ACTIVA) return;
@@ -405,7 +491,13 @@ document.querySelectorAll(".wa-number").forEach((el) => { el.textContent = WHATS
 renderPlanes();
 mostrarPromoSiCorresponde();
 
-Promise.all([cargarMenu(), cargarCerrados().catch(() => ({}))])
+cargarPrecios()
+  .catch(() => PRECIOS)
+  .then((precios) => {
+    PRECIOS = precios;
+    renderPlanes();
+    return Promise.all([cargarMenu(), cargarCerrados().catch(() => ({}))]);
+  })
   .then(([menu, cerrados]) => {
     MENU = menu;
     CERRADOS = cerrados;

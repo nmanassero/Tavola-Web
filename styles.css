@@ -66,14 +66,19 @@ main h2 { font-size: 2.6rem; margin: 40px 0 4px; }
 .promo-lead { margin: 6px 0 16px; font-size: 1.15rem; color: var(--brown); }
 .promo-lead strong { color: var(--red); font-size: 1.4rem; }
 .plans { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 8px; text-align: left; }
-.plans li {
-  display: grid; grid-template-columns: 1fr auto; gap: 0 12px;
-  background: var(--paper-light); border-radius: 10px; padding: 10px 14px;
+.plan {
+  display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; cursor: pointer;
+  background: var(--paper-light); border: 2px solid transparent; border-radius: 12px; padding: 10px 14px;
 }
-.plans li:last-child { border: 2px solid var(--green); }
-.plans li > small { grid-column: 1 / -1; color: var(--muted); }
-.plan-price { font-weight: 600; color: var(--brown); }
-.plan-price small { font-weight: 400; color: var(--muted); }
+.plan:has(input:checked) { border-color: var(--green); background: #f7fbef; }
+.plan input { grid-row: 1 / span 4; accent-color: var(--green); width: 18px; height: 18px; margin: 0; }
+.plan-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.plan-off { background: var(--red); color: #fff; font-weight: 700; font-size: .8rem; border-radius: 999px; padding: 1px 8px; }
+.plan-price { color: var(--brown); }
+.plan-price b { font-size: 1.15rem; }
+.plan s, #order-total-line s { color: var(--muted); font-weight: 400; }
+.plan-month { font-size: .85rem; color: var(--muted); }
+.plan small { color: var(--muted); }
 .promo-actions { display: flex; flex-direction: column; gap: 6px; }
 
 .day-nav {
@@ -187,15 +192,12 @@ input, select, textarea {
 .footer { text-align: center; padding: 40px 16px; color: var(--muted); }
 .footer p { margin: 16px 0 0; }
 
-/* Cartel verde "whatsapp 3425-…" como el de los posts de Instagram */
-.wa-badge {
-  display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.05;
-  background: var(--green); color: #fff; text-decoration: none;
-  border-radius: 18px 18px 18px 4px; padding: 8px 16px 10px;
-  font-family: "Caveat Brush", cursive;
+/* Número de WhatsApp, discreto */
+.wa-badge { color: var(--green-dark); font-weight: 600; font-size: .9rem; text-decoration: none; }
+.wa-badge:hover { text-decoration: underline; }
+.wa-badge::before {
+  content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px;
+  border-radius: 50%; background: var(--green); vertical-align: middle;
 }
-.wa-badge small { font-size: 1.1rem; }
-.wa-badge span { font-size: 1.6rem; letter-spacing: .02em; }
-.wa-badge:hover { background: var(--green-dark); }
-.hero .wa-badge { margin: 16px auto 0; display: flex; width: max-content; }
+.hero .wa-badge { display: block; width: max-content; margin: 16px auto 0; }
 .footer a { color: var(--red); font-weight: 600; text-decoration: none; }

@@ -1,6 +1,6 @@
 # Tavola · Web de pedidos
 
-Landing de viandas: el cliente elige, para cada día, una vianda (menú estándar o saludable) y, si quiere, un opcional, y la forma de pago (diario, plan semanal o plan mensual). El pedido se envía por WhatsApp.
+Landing de viandas: el cliente elige, para cada día, una vianda (menú estándar o saludable) y, si quiere, un opcional, y la forma de pago (diario, plan semanal o plan mensual, con su precio y ahorro). El pedido se envía por WhatsApp.
 
 Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servidor ni base de datos.
 
@@ -17,7 +17,7 @@ Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servido
    - **dia**: Lunes, Martes, Miércoles, Jueves, Viernes, o `Todos` (aparece todos los días).
    - **tipo**: `Estándar` (o `Común`), `Saludable` u `Opcional`. Por día se elige una sola vianda: estándar **o** saludable. El opcional es un cambio sobre esa vianda (otra salsa, tortilla en lugar de arroz…); se puede elegir uno solo.
    - **descripcion**: opcional.
-   - **precio**: opcional. En los menús, si queda vacío se usa el precio por defecto (`PRECIO_POR_DEFECTO` en `app.js`). En los opcionales, vacío significa sin cargo; si tiene precio, se suma a la vianda.
+   - **precio**: opcional. En los menús, si queda vacío se usa el precio por defecto ("Precio vianda" de la pestaña Precios, o `PRECIOS` en `app.js`). En los opcionales, vacío significa sin cargo; si tiene precio, se suma a la vianda.
    - Un día sin filas no se muestra.
 
    Se puede partir de `menu.csv` (Archivo → Importar en Google Sheets).
@@ -43,6 +43,20 @@ Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servido
    - Es por día de la semana: después del feriado hay que volver a ponerlo en `1`.
    - Si la pestaña no existe, todos los días quedan abiertos.
 
+5. (Opcional) Para configurar precios y planes, agregar una pestaña llamada exactamente **Precios**:
+
+   | concepto | valor |
+   |----------|-------|
+   | Precio vianda | 5700 |
+   | Días por mes | 20 |
+   | Ahorro plan semanal (viandas por mes) | 1 |
+   | Ahorro plan mensual (viandas por mes) | 3 |
+
+   - Todo se calcula sobre un mes de "Días por mes" días hábiles: sin plan, 20 × $5.700 = $114.000; plan semanal, una vianda menos ($108.300, se paga por semana); plan mensual, tres viandas menos ($96.900).
+   - La web muestra el precio sin plan tachado, el precio del plan y el porcentaje de ahorro.
+   - "Precio vianda" también es el precio de los menús que tengan la columna `precio` vacía en el menú.
+   - Si la pestaña no existe, se usan los valores de `PRECIOS` en `app.js`.
+
 Después, cada cambio en la planilla aparece en la web al recargar la página (Google puede tardar unos minutos en reflejarlo).
 
 Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
@@ -51,12 +65,11 @@ Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
 
 - `WHATSAPP_NUMBER`: número que recibe los pedidos, formato internacional sin `+` (54 9 + característica + número).
 - `WHATSAPP_VISIBLE`: el mismo número como se muestra en la web (por ejemplo `3425-208204`).
-
-Al cambiar `app.js` o `styles.css`, subir el número de versión (`?v=`) en `index.html` para que los celulares no usen la versión anterior guardada.
-- `PRECIO_POR_DEFECTO`: precio de cada vianda sin precio en la planilla.
-- `PRECIO_SEMANAL` / `PRECIO_MENSUAL`: precio por vianda de cada plan. En `null` la web muestra "Más barato" en lugar del precio.
+- `PRECIOS`: valores por defecto de precios y planes, que se usan si la planilla no tiene la pestaña "Precios".
 - `PROMO_ACTIVA`: cartel "¡Aprovechá y reservá mensualmente!" que aparece al entrar (una vez cada `PROMO_DIAS` días por celular). `false` lo apaga.
 - `HORA_LIMITE`: hasta qué hora (de Argentina) se puede pedir la vianda del mismo día. Los días que ya pasaron no se muestran. Los sábados no se toman pedidos; desde el domingo se muestra la semana siguiente.
+
+Al cambiar `app.js` o `styles.css`, subir el número de versión (`?v=`) en `index.html` para que los celulares no usen la versión anterior guardada.
 
 ## Probar localmente
 

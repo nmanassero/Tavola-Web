@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <header class="hero">
@@ -24,7 +24,7 @@
         <li>Pedidos hasta las 10:30 hs</li>
       </ul>
       <a class="btn btn-green" href="#menus">Ver menúes</a>
-      <a class="wa-badge" target="_blank" rel="noopener"><small>whatsapp</small><span class="wa-number"></span></a>
+      <a class="wa-badge" target="_blank" rel="noopener">WhatsApp <span class="wa-number"></span></a>
     </div>
   </header>
 
@@ -32,7 +32,7 @@
     <h2>Menú de la semana</h2>
     <p class="intro">Para cada día elegí <strong>menú estándar</strong> o <strong>menú saludable</strong> (una vianda por día) y, si querés, un <strong>opcional</strong>.</p>
     <div class="plans-box">
-      <p>Pagá por día, por semana o por mes. <strong>Con los planes ahorrás hasta un 25%.</strong></p>
+      <p>Pagá por día, por semana o por mes. <strong>Con los planes ahorrás hasta un <span class="ahorro-max">15%</span>.</strong></p>
       <button type="button" class="btn btn-green btn-small" id="open-promo">Ver planes</button>
     </div>
     <ul id="day-nav" class="day-nav"></ul>
@@ -81,10 +81,10 @@
   <dialog id="promo-dialog" class="promo">
     <img class="promo-logo" src="img/logo.png" alt="">
     <h3>¡Aprovechá y reservá mensualmente!</h3>
-    <p class="promo-lead">Ahorrás hasta un <strong>25%</strong></p>
-    <ul class="plans"></ul>
+    <p class="promo-lead">Ahorrás hasta un <strong class="ahorro-max">15%</strong></p>
+    <ul class="plans" id="plans"></ul>
     <div class="promo-actions">
-      <a class="btn btn-green" id="promo-whatsapp" target="_blank" rel="noopener">Quiero el plan mensual</a>
+      <button type="button" class="btn btn-green" id="promo-choose">Quiero el plan mensual</button>
       <button type="button" class="btn btn-ghost" id="promo-close">Ver el menú</button>
     </div>
   </dialog>
@@ -100,10 +100,10 @@
   </dialog>
 
   <footer class="wrap footer">
-    <a class="wa-badge" target="_blank" rel="noopener"><small>whatsapp</small><span class="wa-number"></span></a>
+    <p><a class="wa-badge" target="_blank" rel="noopener">WhatsApp <span class="wa-number"></span></a></p>
     <p>Seguinos en <a href="https://www.instagram.com/tavola_oficial" target="_blank" rel="noopener">@tavola_oficial</a></p>
   </footer>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
