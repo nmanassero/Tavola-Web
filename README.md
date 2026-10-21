@@ -26,9 +26,11 @@ Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servido
 
 3. Copiar el ID de la planilla (la parte del link entre `/d/` y `/edit`) y pegarlo en `SHEET_ID` en `app.js`. Esto se hace una sola vez.
 
+   Ya está configurada la planilla [Tavola · Menú semanal](https://docs.google.com/spreadsheets/d/16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA/edit). Si no está compartida como "Lector" para cualquiera con el enlace, la web muestra un aviso para pedir por WhatsApp.
+
 Después, cada cambio en la planilla aparece en la web al recargar la página (Google puede tardar unos minutos en reflejarlo).
 
-Mientras `SHEET_ID` esté vacío, la web usa `menu.csv` (menú de ejemplo).
+Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
 
 ## Otras configuraciones (`app.js`)
 

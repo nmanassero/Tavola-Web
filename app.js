@@ -1,6 +1,6 @@
 // ===== Configuración =====
 // Número de WhatsApp en formato internacional, sin "+" ni espacios (54 + 9 + característica + número).
-const WHATSAPP_NUMBER = "5493425111111";
+const WHATSAPP_NUMBER = "5493425690824";
 
 // Precio de cada vianda u opcional cuando la columna "precio" de la planilla está vacía.
 const PRECIO_POR_DEFECTO = 4900;
@@ -8,7 +8,7 @@ const PRECIO_POR_DEFECTO = 4900;
 // ID de la planilla de Google con el menú: es la parte del link entre "/d/" y "/edit".
 // La planilla tiene que estar compartida como "Cualquier persona con el enlace: Lector".
 // Si queda vacío, se usa el archivo menu.csv de esta web.
-const SHEET_ID = "";
+const SHEET_ID = "16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA";
 
 // ===== Datos =====
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
