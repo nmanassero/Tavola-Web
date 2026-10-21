@@ -1,6 +1,6 @@
 # Tavola · Web de pedidos
 
-Landing de viandas: el cliente elige, para cada día, menú estándar, saludable u opcional, y la forma de pago (diario, plan semanal o plan mensual). El pedido se envía por WhatsApp.
+Landing de viandas: el cliente elige, para cada día, una vianda (menú estándar o saludable) y, si quiere, un opcional, y la forma de pago (diario, plan semanal o plan mensual). El pedido se envía por WhatsApp.
 
 Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servidor ni base de datos.
 
@@ -15,9 +15,9 @@ Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servido
    | Lunes | Opcional | Milanesa con tortilla de papas | En lugar de papas al horno. | |
 
    - **dia**: Lunes, Martes, Miércoles, Jueves, Viernes, o `Todos` (aparece todos los días).
-   - **tipo**: `Estándar` (o `Común`), `Saludable` u `Opcional`. El opcional es una variante del día (otra salsa, tortilla en lugar de arroz…) y se elige en lugar de los otros dos.
+   - **tipo**: `Estándar` (o `Común`), `Saludable` u `Opcional`. Por día se elige una sola vianda: estándar **o** saludable. El opcional es un cambio sobre esa vianda (otra salsa, tortilla en lugar de arroz…); se puede elegir uno solo.
    - **descripcion**: opcional.
-   - **precio**: opcional. Si queda vacío se usa el precio por defecto (`PRECIO_POR_DEFECTO` en `app.js`).
+   - **precio**: opcional. En los menús, si queda vacío se usa el precio por defecto (`PRECIO_POR_DEFECTO` en `app.js`). En los opcionales, vacío significa sin cargo; si tiene precio, se suma a la vianda.
    - Un día sin filas no se muestra.
 
    Se puede partir de `menu.csv` (Archivo → Importar en Google Sheets).

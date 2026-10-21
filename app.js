@@ -3,6 +3,7 @@
 const WHATSAPP_NUMBER = "5493425690824";
 
 // Precio de cada vianda cuando la columna "precio" de la planilla está vacía.
+// Los opcionales sin precio no suman nada; si tienen precio, se suma a la vianda.
 const PRECIO_POR_DEFECTO = 5700;
 
 // ID de la planilla de Google con el menú: es la parte del link entre "/d/" y "/edit".
@@ -43,7 +44,8 @@ const PAGOS = {
 let MENU = [];
 // Días cerrados desde la pestaña "Días" de la planilla: { Lunes: "Feriado", … }.
 let CERRADOS = {};
-const cart = {};
+// Lo elegido para cada día: { Lunes: { menu: "i3", opcional: "i7" } }. Una sola vianda por día.
+const sel = {};
 const money = (n) => "$" + n.toLocaleString("es-AR");
 const $ = (id) => document.getElementById(id);
 const norm = (s) => (s || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -92,7 +94,7 @@ function cargarFilas(rows) {
     const plato = (r[col("plato")] || "").trim();
     const tipo = tipoDe(r[col("tipo")]);
     if (!plato || !tipo) return;
-    const precio = Number((r[col("precio")] || "").replace(/\D/g, "")) || PRECIO_POR_DEFECTO;
+    const precio = Number((r[col("precio")] || "").replace(/\D/g, "")) || (tipo === "opcional" ? 0 : PRECIO_POR_DEFECTO);
     diasDe(r[col("dia")]).forEach((dia) => {
       items.push({ id: "i" + items.length, dia, tipo, plato, descripcion: (r[col("descripcion")] || "").trim(), precio });
     });
@@ -166,9 +168,9 @@ let CAL = calendario();
 // Saca del pedido lo que ya no se puede pedir (por ejemplo, si la página quedó abierta después de la hora límite).
 function quitarCerrados() {
   CAL = calendario();
-  const cerrados = items().filter((i) => !CAL[i.dia].abierto);
+  const cerrados = pedidos().filter((p) => !CAL[p.dia].abierto);
   if (!cerrados.length) return false;
-  cerrados.forEach((i) => delete cart[i.id]);
+  cerrados.forEach((p) => delete sel[p.dia]);
   renderMenu();
   updateCart();
   alert(`Ya pasaron las ${HORA_LIMITE} hs: sacamos del pedido las viandas de ${[...new Set(cerrados.map((i) => i.dia))].join(", ")}.`);
@@ -191,52 +193,69 @@ function renderMenu() {
       const aviso = !motivo ? "Cerrado" : norm(motivo).startsWith("cerrado") ? esc(motivo) : `Cerrado · ${esc(motivo)}`;
       return `<section class="day day-closed" id="dia-${norm(dia)}"><h3>${dia} <small>${CAL[dia].fecha}</small></h3><p class="day-closed-note">${aviso}</p></section>`;
     }
-    const grupos = Object.keys(TIPOS).map((tipo) => {
-      const items = MENU.filter((i) => i.dia === dia && i.tipo === tipo);
-      if (!items.length) return "";
-      return `
-        <div class="group group-${tipo}">
-          <h4>${TIPOS[tipo]}</h4>
-          ${items.map((i) => `
-            <div class="dish">
-              <div class="dish-info">
-                <strong>${esc(i.plato)}</strong>
-                ${i.descripcion ? `<p>${esc(i.descripcion)}</p>` : ""}
-                <span class="price">${money(i.precio)}</span>
-              </div>
-              <div class="qty">
-                <button type="button" data-id="${i.id}" data-delta="-1" aria-label="Quitar ${esc(i.plato)} del ${dia}">−</button>
-                <span id="qty-${i.id}">0</span>
-                <button type="button" data-id="${i.id}" data-delta="1" aria-label="Agregar ${esc(i.plato)} del ${dia}">+</button>
-              </div>
-            </div>`).join("")}
-        </div>`;
-    }).join("");
+    const menus = MENU.filter((i) => i.dia === dia && i.tipo !== "opcional");
+    const opcionales = MENU.filter((i) => i.dia === dia && i.tipo === "opcional");
+    const opciones = menus.map((i) => `
+      <button type="button" class="choice choice-${i.tipo}" data-dia="${dia}" data-menu="${i.id}" aria-pressed="false">
+        <span class="choice-tag">${TIPOS[i.tipo]}</span>
+        <strong>${esc(i.plato)}</strong>
+        ${i.descripcion ? `<span class="choice-desc">${esc(i.descripcion)}</span>` : ""}
+        <span class="price">${money(i.precio)}</span>
+      </button>`).join("");
+    const extras = opcionales.length ? `
+      <div class="extras" data-dia="${dia}">
+        <h4>Opcional <small>· elegí un cambio si querés</small></h4>
+        <div class="extras-list">
+          ${opcionales.map((i) => `
+            <button type="button" class="chip" data-dia="${dia}" data-opcional="${i.id}" aria-pressed="false" disabled>
+              ${esc(i.plato)}${i.precio ? ` <small>+${money(i.precio)}</small>` : ""}
+            </button>`).join("")}
+        </div>
+        <p class="extras-hint">Primero elegí el menú del día.</p>
+      </div>` : "";
     const limite = CAL[dia].hoy ? `<span class="day-limit">Pedí hasta las ${HORA_LIMITE} hs</span>` : "";
-    return `<section class="day" id="dia-${norm(dia)}"><h3>${dia} <small>${CAL[dia].fecha}</small></h3>${limite}<div class="day-groups">${grupos}</div></section>`;
+    return `<section class="day" id="dia-${norm(dia)}"><h3>${dia} <small>${CAL[dia].fecha}</small></h3>${limite}
+      <div class="day-groups">${opciones}</div>${extras}</section>`;
   }).join("");
+  syncSeleccion();
 }
 
-function items() {
-  return MENU.filter((i) => cart[i.id] > 0).map((i) => ({ ...i, cantidad: cart[i.id] }));
+// Refleja en los botones lo elegido en `sel`.
+function syncSeleccion() {
+  document.querySelectorAll("[data-menu]").forEach((b) => {
+    b.setAttribute("aria-pressed", String(sel[b.dataset.dia]?.menu === b.dataset.menu));
+  });
+  document.querySelectorAll("[data-opcional]").forEach((b) => {
+    const s = sel[b.dataset.dia];
+    b.disabled = !s?.menu;
+    b.setAttribute("aria-pressed", String(s?.opcional === b.dataset.opcional));
+  });
+  document.querySelectorAll(".extras").forEach((x) => x.classList.toggle("extras-off", !sel[x.dataset.dia]?.menu));
+}
+
+const porId = (id) => MENU.find((i) => i.id === id);
+
+// Una entrada por día con vianda elegida.
+function pedidos() {
+  return DIAS.filter((d) => sel[d]?.menu).map((dia) => {
+    const menu = porId(sel[dia].menu);
+    const opcional = sel[dia].opcional ? porId(sel[dia].opcional) : null;
+    return { dia, menu, opcional, precio: menu.precio + (opcional ? opcional.precio : 0) };
+  });
 }
 
 function resumen(list) {
-  const cantidad = list.reduce((s, i) => s + i.cantidad, 0);
-  const total = list.reduce((s, i) => s + i.cantidad * i.precio, 0);
+  const cantidad = list.length;
+  const total = list.reduce((s, p) => s + p.precio, 0);
   return { texto: cantidad === 1 ? "1 vianda" : `${cantidad} viandas`, total, cantidad };
 }
 
 function updateCart() {
-  const r = resumen(items());
+  const r = resumen(pedidos());
   $("cart-count").textContent = r.texto;
   $("cart-total").textContent = r.cantidad ? money(r.total) : "";
   $("open-order").disabled = r.cantidad === 0;
-  MENU.forEach((i) => { const el = $("qty-" + i.id); if (el) el.textContent = cart[i.id] || 0; });
-}
-
-function etiqueta(i) {
-  return `${TIPOS[i.tipo]}: ${i.plato}`;
+  syncSeleccion();
 }
 
 // Recordar nombre, dirección y forma de pago en este celular, para el próximo pedido.
@@ -254,30 +273,36 @@ function restaurarDatos() {
 function mostrarTotal() {
   const pago = $("order-form").elements.pago.value;
   $("order-total-line").innerHTML = pago === "diario"
-    ? `Total a transferir: <strong>${money(resumen(items()).total)}</strong>`
+    ? `Total a transferir: <strong>${money(resumen(pedidos()).total)}</strong>`
     : `Incluido en tu ${PAGOS[pago].toLowerCase()}. El pago del plan lo coordinamos por WhatsApp.`;
 }
 
-function porDia(list) {
-  return DIAS.map((dia) => ({ dia, items: list.filter((i) => i.dia === dia) })).filter((g) => g.items.length);
-}
-
+// Tocar un menú lo elige (y deselecciona el otro); tocarlo de nuevo lo quita, junto con su opcional.
+// El opcional es uno solo por día y solo se puede elegir si hay menú.
 $("menu").addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-id]");
-  if (!btn) return;
-  const id = btn.dataset.id;
-  cart[id] = Math.max(0, (cart[id] || 0) + Number(btn.dataset.delta));
+  const btn = e.target.closest("button[data-dia]");
+  if (!btn || btn.disabled) return;
+  const dia = btn.dataset.dia;
+  const s = sel[dia] || (sel[dia] = { menu: null, opcional: null });
+  if (btn.dataset.menu) {
+    if (s.menu === btn.dataset.menu) delete sel[dia];
+    else s.menu = btn.dataset.menu;
+  } else if (btn.dataset.opcional) {
+    s.opcional = s.opcional === btn.dataset.opcional ? null : btn.dataset.opcional;
+  }
   updateCart();
 });
 
 const dialog = $("order-dialog");
 
 $("open-order").addEventListener("click", () => {
-  if (quitarCerrados() && !items().length) return;
-  const list = items();
-  $("order-list").innerHTML = porDia(list).map((g) => `
-    <li><strong>${g.dia} ${CAL[g.dia].fecha}</strong>
-      <ul>${g.items.map((i) => `<li>${i.cantidad} × ${esc(etiqueta(i))}</li>`).join("")}</ul>
+  if (quitarCerrados() && !pedidos().length) return;
+  $("order-list").innerHTML = pedidos().map((p) => `
+    <li><strong>${p.dia} ${CAL[p.dia].fecha}</strong>
+      <ul>
+        <li>${TIPOS[p.menu.tipo]}: ${esc(p.menu.plato)}</li>
+        ${p.opcional ? `<li>Opcional: ${esc(p.opcional.plato)}</li>` : ""}
+      </ul>
     </li>`).join("");
   restaurarDatos();
   mostrarTotal();
@@ -291,11 +316,11 @@ $("order-form").addEventListener("submit", (e) => {
   e.preventDefault();
   if (quitarCerrados()) { dialog.close(); return; }
   const data = new FormData(e.target);
-  const list = items();
+  const list = pedidos();
   const lines = ["¡Hola Tavola! Quiero hacer un pedido:"];
-  porDia(list).forEach((g) => {
-    lines.push("", `*${g.dia} ${CAL[g.dia].fecha}*`);
-    g.items.forEach((i) => lines.push(`• ${i.cantidad} × ${etiqueta(i)}`));
+  list.forEach((p) => {
+    lines.push("", `*${p.dia} ${CAL[p.dia].fecha}*`, `• ${TIPOS[p.menu.tipo]}: ${p.menu.plato}`);
+    if (p.opcional) lines.push(`• Opcional: ${p.opcional.plato}`);
   });
   const pago = data.get("pago");
   lines.push(
