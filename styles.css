@@ -68,6 +68,11 @@ main h2 { font-size: 2.6rem; margin: 40px 0 4px; }
 .day { scroll-margin-top: 64px; margin-bottom: 28px; }
 .day h3 { font-size: 2.2rem; margin: 16px 0 8px; }
 .day h3 small { font-size: 1.4rem; color: var(--muted); }
+.day-closed h3 { color: var(--muted); }
+.day-closed-note {
+  margin: 0; padding: 14px 16px; border-radius: var(--radius);
+  background: var(--paper); color: var(--brown); font-weight: 600;
+}
 .day-limit {
   display: inline-block; margin: -4px 0 10px;
   background: var(--red); color: #fff; border-radius: 999px;

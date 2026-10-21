@@ -28,6 +28,21 @@ Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servido
 
    Ya está configurada la planilla [Tavola · Menú semanal](https://docs.google.com/spreadsheets/d/16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA/edit). Si no está compartida como "Lector" para cualquiera con el enlace, la web muestra un aviso para pedir por WhatsApp.
 
+4. (Opcional) Para cerrar un día (feriado, caso especial), agregar una segunda pestaña llamada exactamente **Días** con estas columnas:
+
+   | dia | abierto | motivo |
+   |-----|---------|--------|
+   | Lunes | 1 | |
+   | Martes | 1 | |
+   | Miércoles | 0 | Feriado |
+   | Jueves | 1 | |
+   | Viernes | 1 | |
+
+   - **abierto**: `1` abierto, `0` cerrado. Vacío cuenta como abierto.
+   - **motivo**: opcional; se muestra en la web (por ejemplo "Cerrado · Feriado").
+   - Es por día de la semana: después del feriado hay que volver a ponerlo en `1`.
+   - Si la pestaña no existe, todos los días quedan abiertos.
+
 Después, cada cambio en la planilla aparece en la web al recargar la página (Google puede tardar unos minutos en reflejarlo).
 
 Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
@@ -36,7 +51,7 @@ Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
 
 - `WHATSAPP_NUMBER`: número que recibe los pedidos, formato internacional sin `+` (54 9 + característica + número).
 - `PRECIO_POR_DEFECTO`: precio de cada vianda u opcional sin precio en la planilla.
-- `HORA_LIMITE`: hasta qué hora (de Argentina) se puede pedir la vianda del mismo día. Los días que ya pasaron no se muestran; sábados y domingos se muestra la semana siguiente.
+- `HORA_LIMITE`: hasta qué hora (de Argentina) se puede pedir la vianda del mismo día. Los días que ya pasaron no se muestran. Los sábados no se toman pedidos; desde el domingo se muestra la semana siguiente.
 
 ## Probar localmente
 

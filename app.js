@@ -10,9 +10,9 @@ const PRECIO_POR_DEFECTO = 5700;
 // Si queda vacío, se usa el archivo menu.csv de esta web.
 const SHEET_ID = "16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA";
 
-// Hora límite para pedir la vianda del mismo día (hora de Argentina).
+// Hora límite para pedir la vianda del mismo día (hora de Argentina, formato 24 hs).
 // Los días que ya pasaron, y el día de hoy después de esta hora, no se pueden pedir.
-// Sábados y domingos se muestra la semana siguiente completa.
+// Los domingos ya se puede pedir para la semana siguiente; los sábados no se toman pedidos.
 const HORA_LIMITE = "10:30";
 const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
 
@@ -25,6 +25,8 @@ const TIPOS = {
 };
 
 let MENU = [];
+// Días cerrados desde la pestaña "Días" de la planilla: { Lunes: "Feriado", … }.
+let CERRADOS = {};
 const cart = {};
 const money = (n) => "$" + n.toLocaleString("es-AR");
 const $ = (id) => document.getElementById(id);
@@ -82,13 +84,32 @@ function cargarFilas(rows) {
   return items;
 }
 
-async function cargarMenu() {
-  const url = SHEET_ID
-    ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
-    : "menu.csv";
+async function leerCSV(url) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("HTTP " + res.status);
-  return cargarFilas(parseCSV(await res.text()));
+  return parseCSV(await res.text());
+}
+
+async function cargarMenu() {
+  return cargarFilas(await leerCSV(SHEET_ID
+    ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
+    : "menu.csv"));
+}
+
+// Pestaña "Días" (columnas: dia, abierto, motivo). Con "abierto" en 0 el día se muestra cerrado.
+// Si la pestaña no existe, Google devuelve la del menú: como no tiene la columna "abierto", se ignora.
+async function cargarCerrados() {
+  if (!SHEET_ID) return {};
+  const rows = await leerCSV(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Días")}`);
+  const header = rows[0].map(norm);
+  const [cDia, cAbierto, cMotivo] = ["dia", "abierto", "motivo"].map((c) => header.indexOf(c));
+  if (cDia < 0 || cAbierto < 0) return {};
+  const cerrados = {};
+  rows.slice(1).forEach((r) => {
+    if ((r[cAbierto] || "").trim() !== "0") return;
+    diasDe(r[cDia]).forEach((dia) => { cerrados[dia] = (r[cMotivo] || "").trim(); });
+  });
+  return cerrados;
 }
 
 // ===== Horario =====
@@ -107,7 +128,8 @@ function calendario() {
   const [h, m] = HORA_LIMITE.split(":").map(Number);
   const dow = new Date(hoy).getUTCDay(); // 0 domingo … 6 sábado
   const DIA_MS = 86400000;
-  const lunes = dow === 0 || dow === 6 ? hoy + ((8 - dow) % 7) * DIA_MS : hoy - (dow - 1) * DIA_MS;
+  // El domingo muestra la semana siguiente; el sábado la semana actual, que ya pasó entera.
+  const lunes = dow === 0 ? hoy + DIA_MS : hoy - (dow - 1) * DIA_MS;
   const cal = {};
   DIAS.forEach((dia, i) => {
     const fecha = lunes + i * DIA_MS;
@@ -115,8 +137,10 @@ function calendario() {
     cal[dia] = {
       fecha: `${d.getUTCDate()}/${d.getUTCMonth() + 1}`,
       hoy: fecha === hoy,
-      abierto: fecha > hoy || (fecha === hoy && minutos < h * 60 + m),
+      enHorario: fecha > hoy || (fecha === hoy && minutos < h * 60 + m),
+      cerrado: dia in CERRADOS ? CERRADOS[dia] : null,
     };
+    cal[dia].abierto = cal[dia].enHorario && cal[dia].cerrado === null;
   });
   return cal;
 }
@@ -137,13 +161,20 @@ function quitarCerrados() {
 
 // ===== Vista =====
 function renderMenu() {
-  const dias = DIAS.filter((d) => CAL[d].abierto && MENU.some((i) => i.dia === d));
-  $("day-nav").innerHTML = dias.map((d) => `<li><a href="#dia-${norm(d)}">${d} ${CAL[d].fecha}</a></li>`).join("");
-  if (!dias.length) {
-    $("menu").innerHTML = `<p class="error">Por esta semana ya no tomamos más pedidos. Los pedidos para la semana que viene se abren el sábado.</p>`;
+  // Los días cerrados desde la planilla se muestran con su aviso; los que ya pasaron, no.
+  const dias = DIAS.filter((d) => CAL[d].enHorario && (CAL[d].cerrado !== null || MENU.some((i) => i.dia === d)));
+  if (!dias.some((d) => CAL[d].abierto)) {
+    $("day-nav").innerHTML = "";
+    $("menu").innerHTML = `<p class="error">Por esta semana ya no tomamos más pedidos. Los pedidos para la semana que viene se abren el domingo.</p>`;
     return;
   }
+  $("day-nav").innerHTML = dias.map((d) => `<li><a href="#dia-${norm(d)}">${d} ${CAL[d].fecha}</a></li>`).join("");
   $("menu").innerHTML = dias.map((dia) => {
+    if (!CAL[dia].abierto) {
+      const motivo = CAL[dia].cerrado;
+      const aviso = !motivo ? "Cerrado" : norm(motivo).startsWith("cerrado") ? esc(motivo) : `Cerrado · ${esc(motivo)}`;
+      return `<section class="day day-closed" id="dia-${norm(dia)}"><h3>${dia} <small>${CAL[dia].fecha}</small></h3><p class="day-closed-note">${aviso}</p></section>`;
+    }
     const grupos = Object.keys(TIPOS).map((tipo) => {
       const items = MENU.filter((i) => i.dia === dia && i.tipo === tipo);
       if (!items.length) return "";
@@ -245,9 +276,11 @@ $("order-form").addEventListener("submit", (e) => {
   dialog.close();
 });
 
-cargarMenu()
-  .then((menu) => {
+Promise.all([cargarMenu(), cargarCerrados().catch(() => ({}))])
+  .then(([menu, cerrados]) => {
     MENU = menu;
+    CERRADOS = cerrados;
+    CAL = calendario();
     if (!MENU.length) throw new Error("menú vacío");
     renderMenu();
     updateCart();
