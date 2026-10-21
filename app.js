@@ -10,6 +10,12 @@ const PRECIO_POR_DEFECTO = 5700;
 // Si queda vacío, se usa el archivo menu.csv de esta web.
 const SHEET_ID = "16ZAoyG84e3HsgFKtloFarXCU_jOTyWKfwAHMv3lZZZA";
 
+// Hora límite para pedir la vianda del mismo día (hora de Argentina).
+// Los días que ya pasaron, y el día de hoy después de esta hora, no se pueden pedir.
+// Sábados y domingos se muestra la semana siguiente completa.
+const HORA_LIMITE = "10:30";
+const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
+
 // ===== Datos =====
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const TIPOS = {
@@ -85,10 +91,58 @@ async function cargarMenu() {
   return cargarFilas(parseCSV(await res.text()));
 }
 
+// ===== Horario =====
+// Fecha y hora actuales en Argentina, sin importar la zona horaria del celular de quien entra.
+function ahora() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: ZONA_HORARIA, year: "numeric", month: "numeric", day: "numeric",
+    hour: "numeric", minute: "numeric", hourCycle: "h23",
+  }).formatToParts(new Date()).map((x) => [x.type, x.value]));
+  return { fecha: Date.UTC(p.year, p.month - 1, p.day), minutos: Number(p.hour) * 60 + Number(p.minute) };
+}
+
+// Para cada día: su fecha y si todavía se puede pedir.
+function calendario() {
+  const { fecha: hoy, minutos } = ahora();
+  const [h, m] = HORA_LIMITE.split(":").map(Number);
+  const dow = new Date(hoy).getUTCDay(); // 0 domingo … 6 sábado
+  const DIA_MS = 86400000;
+  const lunes = dow === 0 || dow === 6 ? hoy + ((8 - dow) % 7) * DIA_MS : hoy - (dow - 1) * DIA_MS;
+  const cal = {};
+  DIAS.forEach((dia, i) => {
+    const fecha = lunes + i * DIA_MS;
+    const d = new Date(fecha);
+    cal[dia] = {
+      fecha: `${d.getUTCDate()}/${d.getUTCMonth() + 1}`,
+      hoy: fecha === hoy,
+      abierto: fecha > hoy || (fecha === hoy && minutos < h * 60 + m),
+    };
+  });
+  return cal;
+}
+
+let CAL = calendario();
+
+// Saca del pedido lo que ya no se puede pedir (por ejemplo, si la página quedó abierta después de la hora límite).
+function quitarCerrados() {
+  CAL = calendario();
+  const cerrados = items().filter((i) => !CAL[i.dia].abierto);
+  if (!cerrados.length) return false;
+  cerrados.forEach((i) => delete cart[i.id]);
+  renderMenu();
+  updateCart();
+  alert(`Ya pasaron las ${HORA_LIMITE} hs: sacamos del pedido las viandas de ${[...new Set(cerrados.map((i) => i.dia))].join(", ")}.`);
+  return true;
+}
+
 // ===== Vista =====
 function renderMenu() {
-  const dias = DIAS.filter((d) => MENU.some((i) => i.dia === d));
-  $("day-nav").innerHTML = dias.map((d) => `<li><a href="#dia-${norm(d)}">${d}</a></li>`).join("");
+  const dias = DIAS.filter((d) => CAL[d].abierto && MENU.some((i) => i.dia === d));
+  $("day-nav").innerHTML = dias.map((d) => `<li><a href="#dia-${norm(d)}">${d} ${CAL[d].fecha}</a></li>`).join("");
+  if (!dias.length) {
+    $("menu").innerHTML = `<p class="error">Por esta semana ya no tomamos más pedidos. Los pedidos para la semana que viene se abren el sábado.</p>`;
+    return;
+  }
   $("menu").innerHTML = dias.map((dia) => {
     const grupos = Object.keys(TIPOS).map((tipo) => {
       const items = MENU.filter((i) => i.dia === dia && i.tipo === tipo);
@@ -111,7 +165,8 @@ function renderMenu() {
             </div>`).join("")}
         </div>`;
     }).join("");
-    return `<section class="day" id="dia-${norm(dia)}"><h3>${dia}</h3><div class="day-groups">${grupos}</div></section>`;
+    const limite = CAL[dia].hoy ? `<span class="day-limit">Pedí hasta las ${HORA_LIMITE} hs</span>` : "";
+    return `<section class="day" id="dia-${norm(dia)}"><h3>${dia} <small>${CAL[dia].fecha}</small></h3>${limite}<div class="day-groups">${grupos}</div></section>`;
   }).join("");
 }
 
@@ -134,7 +189,7 @@ function updateCart() {
   $("cart-count").textContent = r.texto;
   $("cart-total").textContent = r.cantidad ? money(r.total) : "";
   $("open-order").disabled = r.cantidad === 0;
-  MENU.forEach((i) => { $("qty-" + i.id).textContent = cart[i.id] || 0; });
+  MENU.forEach((i) => { const el = $("qty-" + i.id); if (el) el.textContent = cart[i.id] || 0; });
 }
 
 function etiqueta(i) {
@@ -156,9 +211,10 @@ $("menu").addEventListener("click", (e) => {
 const dialog = $("order-dialog");
 
 $("open-order").addEventListener("click", () => {
+  if (quitarCerrados() && !items().length) return;
   const list = items();
   $("order-list").innerHTML = porDia(list).map((g) => `
-    <li><strong>${g.dia}</strong>
+    <li><strong>${g.dia} ${CAL[g.dia].fecha}</strong>
       <ul>${g.items.map((i) => `<li>${i.cantidad} × ${esc(etiqueta(i))} — ${money(i.cantidad * i.precio)}</li>`).join("")}</ul>
     </li>`).join("");
   $("order-total").textContent = money(resumen(list).total);
@@ -169,11 +225,12 @@ $("close-order").addEventListener("click", () => dialog.close());
 
 $("order-form").addEventListener("submit", (e) => {
   e.preventDefault();
+  if (quitarCerrados()) { dialog.close(); return; }
   const data = new FormData(e.target);
   const list = items();
   const lines = ["¡Hola Tavola! Quiero hacer un pedido:"];
   porDia(list).forEach((g) => {
-    lines.push("", `*${g.dia}*`);
+    lines.push("", `*${g.dia} ${CAL[g.dia].fecha}*`);
     g.items.forEach((i) => lines.push(`• ${i.cantidad} × ${etiqueta(i)} (${money(i.cantidad * i.precio)})`));
   });
   lines.push(

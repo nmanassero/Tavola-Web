@@ -36,6 +36,7 @@ Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
 
 - `WHATSAPP_NUMBER`: número que recibe los pedidos, formato internacional sin `+` (54 9 + característica + número).
 - `PRECIO_POR_DEFECTO`: precio de cada vianda u opcional sin precio en la planilla.
+- `HORA_LIMITE`: hasta qué hora (de Argentina) se puede pedir la vianda del mismo día. Los días que ya pasaron no se muestran; sábados y domingos se muestra la semana siguiente.
 
 ## Probar localmente
 
