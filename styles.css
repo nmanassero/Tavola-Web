@@ -88,7 +88,7 @@ main h2 { font-size: 2.6rem; margin: 40px 0 4px; }
   border-top: 6px solid var(--red);
 }
 .group-saludable { border-top-color: var(--green); }
-.group-opcional { border-top-color: var(--brown); background: var(--paper-light); box-shadow: none; border: 2px dashed var(--paper); border-top: 6px solid var(--brown); }
+.group-opcional { border-top-color: var(--brown); }
 .group h4 { margin: 0 0 8px; font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
 
 .dish { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
@@ -141,7 +141,7 @@ dialog h3 { margin-top: 0; font-size: 2rem; }
 .total-line { margin: 0 0 4px; }
 .note { margin: 0 0 16px; color: var(--green-dark); font-size: .9rem; font-weight: 500; }
 label { display: block; font-size: .9rem; font-weight: 500; margin-bottom: 12px; }
-input, textarea {
+input, select, textarea {
   display: block; width: 100%; margin-top: 4px; padding: 10px;
   border: 1px solid #d6c6b6; border-radius: 8px; font: inherit; background: #fff;
 }

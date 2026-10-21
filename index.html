@@ -29,7 +29,7 @@
 
   <main id="menus" class="wrap">
     <h2>Menú de la semana</h2>
-    <p class="intro">Para cada día elegí <strong>menú estándar</strong> o <strong>menú saludable</strong>, y si querés sumá un opcional.</p>
+    <p class="intro">Para cada día elegí <strong>menú estándar</strong>, <strong>menú saludable</strong> u <strong>opcional</strong>. Podés pagar por día, por semana o por mes.</p>
     <ul id="day-nav" class="day-nav"></ul>
     <div id="menu"><p class="loading">Cargando menú…</p></div>
   </main>
@@ -48,7 +48,14 @@
     <form method="dialog" id="order-form">
       <h3>Tu pedido</h3>
       <ul id="order-list"></ul>
-      <p class="total-line">Total: <strong id="order-total"></strong></p>
+      <label>Forma de pago
+        <select name="pago">
+          <option value="diario">Diario</option>
+          <option value="semanal">Plan semanal</option>
+          <option value="mensual">Plan mensual</option>
+        </select>
+      </label>
+      <p class="total-line" id="order-total-line"></p>
       <p class="note">Envío gratis en Santa Fe Capital</p>
       <label>Nombre
         <input name="nombre" required autocomplete="name">

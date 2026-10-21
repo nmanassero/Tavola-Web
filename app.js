@@ -2,7 +2,7 @@
 // Número de WhatsApp en formato internacional, sin "+" ni espacios (54 + 9 + característica + número).
 const WHATSAPP_NUMBER = "5493425690824";
 
-// Precio de cada vianda u opcional cuando la columna "precio" de la planilla está vacía.
+// Precio de cada vianda cuando la columna "precio" de la planilla está vacía.
 const PRECIO_POR_DEFECTO = 5700;
 
 // ID de la planilla de Google con el menú: es la parte del link entre "/d/" y "/edit".
@@ -21,7 +21,15 @@ const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const TIPOS = {
   estandar: "Menú estándar",
   saludable: "Menú saludable",
-  opcional: "Opcionales",
+  opcional: "Opcional",
+};
+
+// Formas de pago. En "diario" se transfiere cada pedido; en los planes, la semana o el mes
+// se pagan aparte (y más barato), y cada día se elige el menú igual.
+const PAGOS = {
+  diario: "Diario",
+  semanal: "Plan semanal",
+  mensual: "Plan mensual",
 };
 
 let MENU = [];
@@ -56,7 +64,7 @@ function parseCSV(text) {
 
 function tipoDe(valor) {
   const t = norm(valor);
-  if (t.startsWith("estandar")) return "estandar";
+  if (t.startsWith("estandar") || t.startsWith("comun")) return "estandar";
   if (t.startsWith("saludable")) return "saludable";
   if (t.startsWith("opcional") || t.startsWith("extra")) return "opcional";
   return null;
@@ -206,13 +214,9 @@ function items() {
 }
 
 function resumen(list) {
-  const viandas = list.filter((i) => i.tipo !== "opcional").reduce((s, i) => s + i.cantidad, 0);
-  const opcionales = list.filter((i) => i.tipo === "opcional").reduce((s, i) => s + i.cantidad, 0);
+  const cantidad = list.reduce((s, i) => s + i.cantidad, 0);
   const total = list.reduce((s, i) => s + i.cantidad * i.precio, 0);
-  const partes = [];
-  if (viandas) partes.push(viandas === 1 ? "1 vianda" : `${viandas} viandas`);
-  if (opcionales) partes.push(opcionales === 1 ? "1 opcional" : `${opcionales} opcionales`);
-  return { texto: partes.join(" + ") || "0 viandas", total, cantidad: viandas + opcionales };
+  return { texto: cantidad === 1 ? "1 vianda" : `${cantidad} viandas`, total, cantidad };
 }
 
 function updateCart() {
@@ -224,7 +228,26 @@ function updateCart() {
 }
 
 function etiqueta(i) {
-  return i.tipo === "opcional" ? `Opcional: ${i.plato}` : `${TIPOS[i.tipo]}: ${i.plato}`;
+  return `${TIPOS[i.tipo]}: ${i.plato}`;
+}
+
+// Recordar nombre, dirección y forma de pago en este celular, para el próximo pedido.
+const CAMPOS_RECORDADOS = ["nombre", "direccion", "pago"];
+function recordarDatos(data) {
+  try { localStorage.setItem("tavola-datos", JSON.stringify(Object.fromEntries(CAMPOS_RECORDADOS.map((c) => [c, data.get(c)])))); } catch {}
+}
+function restaurarDatos() {
+  try {
+    const datos = JSON.parse(localStorage.getItem("tavola-datos") || "{}");
+    CAMPOS_RECORDADOS.forEach((c) => { if (datos[c]) $("order-form").elements[c].value = datos[c]; });
+  } catch {}
+}
+
+function mostrarTotal() {
+  const pago = $("order-form").elements.pago.value;
+  $("order-total-line").innerHTML = pago === "diario"
+    ? `Total a transferir: <strong>${money(resumen(items()).total)}</strong>`
+    : `Incluido en tu ${PAGOS[pago].toLowerCase()}. El pago del plan lo coordinamos por WhatsApp.`;
 }
 
 function porDia(list) {
@@ -246,13 +269,15 @@ $("open-order").addEventListener("click", () => {
   const list = items();
   $("order-list").innerHTML = porDia(list).map((g) => `
     <li><strong>${g.dia} ${CAL[g.dia].fecha}</strong>
-      <ul>${g.items.map((i) => `<li>${i.cantidad} × ${esc(etiqueta(i))} — ${money(i.cantidad * i.precio)}</li>`).join("")}</ul>
+      <ul>${g.items.map((i) => `<li>${i.cantidad} × ${esc(etiqueta(i))}</li>`).join("")}</ul>
     </li>`).join("");
-  $("order-total").textContent = money(resumen(list).total);
+  restaurarDatos();
+  mostrarTotal();
   dialog.showModal();
 });
 
 $("close-order").addEventListener("click", () => dialog.close());
+$("order-form").elements.pago.addEventListener("change", mostrarTotal);
 
 $("order-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -262,16 +287,19 @@ $("order-form").addEventListener("submit", (e) => {
   const lines = ["¡Hola Tavola! Quiero hacer un pedido:"];
   porDia(list).forEach((g) => {
     lines.push("", `*${g.dia} ${CAL[g.dia].fecha}*`);
-    g.items.forEach((i) => lines.push(`• ${i.cantidad} × ${etiqueta(i)} (${money(i.cantidad * i.precio)})`));
+    g.items.forEach((i) => lines.push(`• ${i.cantidad} × ${etiqueta(i)}`));
   });
+  const pago = data.get("pago");
   lines.push(
     "",
-    `Total: ${money(resumen(list).total)}`,
+    `Forma de pago: ${PAGOS[pago]}`,
+    ...(pago === "diario" ? [`Total: ${money(resumen(list).total)}`] : []),
     `Nombre: ${data.get("nombre")}`,
     `Dirección: ${data.get("direccion")}`,
   );
   if (data.get("comentarios").trim()) lines.push(`Comentarios: ${data.get("comentarios").trim()}`);
 
+  recordarDatos(data);
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
   dialog.close();
 });

@@ -1,6 +1,6 @@
 # Tavola · Web de pedidos
 
-Landing de viandas: el cliente elige, para cada día, menú estándar o saludable (y opcionales), y el pedido se envía por WhatsApp.
+Landing de viandas: el cliente elige, para cada día, menú estándar, saludable u opcional, y la forma de pago (diario, plan semanal o plan mensual). El pedido se envía por WhatsApp.
 
 Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servidor ni base de datos.
 
@@ -12,10 +12,10 @@ Es una web estática (`index.html`, `styles.css`, `app.js`): no necesita servido
    |-----|------|-------|-------------|--------|
    | Lunes | Estándar | Milanesa con papas | Milanesa casera con papas rústicas. | |
    | Lunes | Saludable | Ensalada completa | Hojas verdes, huevo y lentejas. | |
-   | Todos | Opcional | Flan casero | Con dulce de leche. | |
+   | Lunes | Opcional | Milanesa con tortilla de papas | En lugar de papas al horno. | |
 
-   - **dia**: Lunes, Martes, Miércoles, Jueves, Viernes, o `Todos` (aparece todos los días; útil para los opcionales).
-   - **tipo**: `Estándar`, `Saludable` u `Opcional`.
+   - **dia**: Lunes, Martes, Miércoles, Jueves, Viernes, o `Todos` (aparece todos los días).
+   - **tipo**: `Estándar` (o `Común`), `Saludable` u `Opcional`. El opcional es una variante del día (otra salsa, tortilla en lugar de arroz…) y se elige en lugar de los otros dos.
    - **descripcion**: opcional.
    - **precio**: opcional. Si queda vacío se usa el precio por defecto (`PRECIO_POR_DEFECTO` en `app.js`).
    - Un día sin filas no se muestra.
@@ -50,7 +50,7 @@ Si `SHEET_ID` queda vacío, la web usa `menu.csv` (menú de ejemplo).
 ## Otras configuraciones (`app.js`)
 
 - `WHATSAPP_NUMBER`: número que recibe los pedidos, formato internacional sin `+` (54 9 + característica + número).
-- `PRECIO_POR_DEFECTO`: precio de cada vianda u opcional sin precio en la planilla.
+- `PRECIO_POR_DEFECTO`: precio de cada vianda sin precio en la planilla.
 - `HORA_LIMITE`: hasta qué hora (de Argentina) se puede pedir la vianda del mismo día. Los días que ya pasaron no se muestran. Los sábados no se toman pedidos; desde el domingo se muestra la semana siguiente.
 
 ## Probar localmente
